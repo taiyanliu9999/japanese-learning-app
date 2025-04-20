@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Layout, ConfigProvider } from 'antd';
 import { AppLayout } from './components/layout/AppLayout';
 import { JapaneseLearning } from './components/JapaneseLearning';
@@ -31,6 +31,7 @@ const App = () => {
             <Route path="/vocabulary" element={<WordList />} />
             <Route path="/statistics" element={<Statistics />} />
             <Route path="/settings" element={<UserSettings />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </AppLayout>
       </Router>
