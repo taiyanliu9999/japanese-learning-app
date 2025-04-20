@@ -13,7 +13,7 @@ interface QuizSectionProps {
   quizData: QuizQuestion[];
 }
 
-export const QuizSection: React.FC<QuizSectionProps> = ({ quizData }) => {
+export const QuizSection = ({ quizData }: QuizSectionProps): JSX.Element => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<string>('');
   const [showResult, setShowResult] = useState(false);

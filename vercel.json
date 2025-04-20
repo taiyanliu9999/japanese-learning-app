@@ -23,10 +23,6 @@
       "dest": "/manifest.json"
     },
     {
-      "src": "/logo(.*)",
-      "dest": "/logo$1"
-    },
-    {
       "src": "/(.*)",
       "dest": "/index.html"
     }

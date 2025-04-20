@@ -16,7 +16,7 @@ interface ReadingSectionProps {
   vocabulary: VocabularyItem[];
 }
 
-export const ReadingSection: React.FC<ReadingSectionProps> = ({ sentences, vocabulary }) => {
+export const ReadingSection = ({ sentences, vocabulary }: ReadingSectionProps): JSX.Element => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showReading, setShowReading] = useState(false);
 

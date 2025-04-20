@@ -14,7 +14,7 @@ interface FlashcardSectionProps {
   vocabulary: VocabularyItem[];
 }
 
-export const FlashcardSection: React.FC<FlashcardSectionProps> = ({ vocabulary }) => {
+export const FlashcardSection = ({ vocabulary }: FlashcardSectionProps): JSX.Element => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showAnswer, setShowAnswer] = useState(false);
   const [progress, setProgress] = useState<Record<string, 'correct' | 'incorrect' | null>>({});
