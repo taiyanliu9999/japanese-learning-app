@@ -36,3 +36,134 @@
     transform: rotate(360deg);
   }
 }
+
+.min-h-screen {
+  min-height: 100vh;
+}
+
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.mx-auto {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.px-4 {
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+.py-8 {
+  padding-top: 2rem;
+  padding-bottom: 2rem;
+}
+
+.mb-4 {
+  margin-bottom: 1rem;
+}
+
+.mb-6 {
+  margin-bottom: 1.5rem;
+}
+
+.max-w-2xl {
+  max-width: 42rem;
+}
+
+.text-2xl {
+  font-size: 1.5rem;
+  line-height: 2rem;
+}
+
+.text-xl {
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+}
+
+.font-bold {
+  font-weight: 700;
+}
+
+.font-semibold {
+  font-weight: 600;
+}
+
+.text-gray-800 {
+  color: #2d3748;
+}
+
+.bg-white {
+  background-color: #ffffff;
+}
+
+.shadow-md {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* Ant Design customizations */
+.ant-layout-header {
+  height: 64px;
+  line-height: 64px;
+  padding: 0;
+}
+
+.ant-input {
+  border-radius: 4px;
+}
+
+.ant-btn-primary {
+  background-color: #1890ff;
+  border-color: #1890ff;
+}
+
+.ant-btn-primary:hover {
+  background-color: #40a9ff;
+  border-color: #40a9ff;
+}
+
+/* Flashcard animations */
+.flashcard-flip {
+  transition: transform 0.6s;
+  transform-style: preserve-3d;
+}
+
+.flashcard-flip.flipped {
+  transform: rotateY(180deg);
+}
+
+/* Reading section styles */
+.reading-section {
+  line-height: 2;
+}
+
+.reading-section ruby {
+  ruby-align: center;
+}
+
+.reading-section rt {
+  font-size: 0.8em;
+  color: #666;
+}
+
+/* Quiz section styles */
+.quiz-option {
+  transition: all 0.3s ease;
+}
+
+.quiz-option:hover {
+  background-color: #f0f0f0;
+}
+
+.quiz-option.correct {
+  background-color: #f6ffed;
+  border-color: #b7eb8f;
+}
+
+.quiz-option.incorrect {
+  background-color: #fff2f0;
+  border-color: #ffccc7;
+}
