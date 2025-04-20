@@ -8,7 +8,14 @@ import { UserSettings } from './components/settings/UserSettings';
 import { Statistics } from './components/progress/Statistics';
 import './App.css';
 
-function App() {
+const App = () => {
+  // This is a placeholder text. In a real app, this would come from an API or user input
+  const sampleText = `
+    私は日本語を勉強しています。
+    毎日新しい単語を覚えます。
+    日本の文化にも興味があります。
+  `;
+
   return (
     <ConfigProvider
       theme={{
@@ -20,7 +27,7 @@ function App() {
       <Router>
         <AppLayout>
           <Routes>
-            <Route path="/" element={<JapaneseLearning />} />
+            <Route path="/" element={<JapaneseLearning text={sampleText} />} />
             <Route path="/vocabulary" element={<WordList />} />
             <Route path="/statistics" element={<Statistics />} />
             <Route path="/settings" element={<UserSettings />} />
@@ -29,6 +36,6 @@ function App() {
       </Router>
     </ConfigProvider>
   );
-}
+};
 
 export default App; 

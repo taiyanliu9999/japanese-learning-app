@@ -1,0 +1,29 @@
+.flashcard-section {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.flashcard {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.word-section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.reading-section,
+.example-section {
+  margin: 20px 0;
+}
+
+.action-buttons {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+} 

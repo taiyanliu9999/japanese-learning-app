@@ -12,28 +12,27 @@ interface JapaneseLearningProps {
   text: string;
 }
 
-export const JapaneseLearning: React.FC<JapaneseLearningProps> = ({ text }) => {
+export const JapaneseLearning = ({ text }: JapaneseLearningProps): JSX.Element => {
   const [processedData, setProcessedData] = useState({
     vocabulary: [],
     sentences: [],
-    quiz: []
+    quizzes: []
   });
 
   useEffect(() => {
-    const data = processJapaneseText(text);
-    setProcessedData(data);
+    const processed = processJapaneseText(text);
+    setProcessedData(processed);
   }, [text]);
 
   return (
-    <div className="japanese-learning-container">
-      <Title level={2} className="text-center mb-8">日本語学習</Title>
-      
-      <Tabs defaultActiveKey="vocabulary" centered>
-        <TabPane tab="単語学習" key="vocabulary">
+    <Card>
+      <Title level={2}>日本語学習</Title>
+      <Tabs defaultActiveKey="flashcards">
+        <TabPane tab="単語カード" key="flashcards">
           <FlashcardSection vocabulary={processedData.vocabulary} />
         </TabPane>
         
-        <TabPane tab="読解学習" key="reading">
+        <TabPane tab="読解練習" key="reading">
           <ReadingSection 
             sentences={processedData.sentences}
             vocabulary={processedData.vocabulary}
@@ -41,9 +40,9 @@ export const JapaneseLearning: React.FC<JapaneseLearningProps> = ({ text }) => {
         </TabPane>
         
         <TabPane tab="理解テスト" key="quiz">
-          <QuizSection quizData={processedData.quiz} />
+          <QuizSection quizData={processedData.quizzes} />
         </TabPane>
       </Tabs>
-    </div>
+    </Card>
   );
 }; 

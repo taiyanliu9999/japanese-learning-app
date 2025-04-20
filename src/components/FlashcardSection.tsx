@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Card, Button, Progress, Space } from 'antd';
 import { SoundOutlined, CheckOutlined, CloseOutlined } from '@ant-design/icons';
 import { Howl } from 'howler';
+import './FlashcardSection.css';
 
 interface VocabularyItem {
   word: string;
@@ -14,10 +15,12 @@ interface FlashcardSectionProps {
   vocabulary: VocabularyItem[];
 }
 
+type ProgressRecord = Record<string, 'correct' | 'incorrect' | null>;
+
 export const FlashcardSection = ({ vocabulary }: FlashcardSectionProps): JSX.Element => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showAnswer, setShowAnswer] = useState(false);
-  const [progress, setProgress] = useState<Record<string, 'correct' | 'incorrect' | null>>({});
+  const [progress, setProgress] = useState({} as ProgressRecord);
 
   const currentWord = vocabulary[currentIndex];
   const progressPercent = (Object.keys(progress).length / vocabulary.length) * 100;
@@ -28,13 +31,13 @@ export const FlashcardSection = ({ vocabulary }: FlashcardSectionProps): JSX.Ele
   };
 
   const handleNext = (result: 'correct' | 'incorrect') => {
-    setProgress(prev => ({
+    setProgress((prev: ProgressRecord) => ({
       ...prev,
       [currentWord.word]: result
     }));
     
     if (currentIndex < vocabulary.length - 1) {
-      setCurrentIndex(prev => prev + 1);
+      setCurrentIndex((prev: number) => prev + 1);
       setShowAnswer(false);
     }
   };
@@ -42,7 +45,7 @@ export const FlashcardSection = ({ vocabulary }: FlashcardSectionProps): JSX.Ele
   const handleReset = () => {
     setCurrentIndex(0);
     setShowAnswer(false);
-    setProgress({});
+    setProgress({} as ProgressRecord);
   };
 
   if (!vocabulary.length) {
@@ -109,38 +112,6 @@ export const FlashcardSection = ({ vocabulary }: FlashcardSectionProps): JSX.Ele
           </Button>
         )}
       </Card>
-
-      <style jsx>{`
-        .flashcard-section {
-          max-width: 600px;
-          margin: 0 auto;
-          padding: 20px;
-        }
-
-        .flashcard {
-          margin-top: 20px;
-          text-align: center;
-        }
-
-        .word-section {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 10px;
-          margin-bottom: 20px;
-        }
-
-        .reading-section,
-        .example-section {
-          margin: 20px 0;
-        }
-
-        .action-buttons {
-          margin-top: 20px;
-          display: flex;
-          justify-content: center;
-        }
-      `}</style>
     </div>
   );
 }; 
