@@ -32,7 +32,7 @@
   },
   "scripts": {
     "start": "cross-env BROWSER=none craco start",
-    "build": "cross-env CI=false TSC_COMPILE_ON_ERROR=true GENERATE_SOURCEMAP=false craco build",
+    "build": "cross-env CI=false TSC_COMPILE_ON_ERROR=true GENERATE_SOURCEMAP=false NODE_ENV=production craco build",
     "test": "cross-env craco test",
     "eject": "react-scripts eject"
   },
