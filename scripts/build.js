@@ -16,6 +16,26 @@ const chalk = require('chalk');
 const webpack = require('webpack');
 const configFactory = require('../config/webpack.config');
 const paths = require('../config/paths');
+
+// 确保字典文件被复制到构建目录
+const copyKuromojiDict = async () => {
+  try {
+    const dictSrcPath = path.resolve(paths.appPublic, 'dict');
+    const dictDestPath = path.resolve(paths.appBuild, 'dict');
+
+    // 检查源目录是否存在
+    if (fs.existsSync(dictSrcPath)) {
+      console.log(chalk.cyan('\nCopying kuromoji dictionary files...'));
+      await fs.copy(dictSrcPath, dictDestPath);
+      console.log(chalk.green('Successfully copied kuromoji dictionary files.'));
+    } else {
+      console.log(chalk.yellow('\nWarning: kuromoji dictionary directory not found at ' + dictSrcPath));
+      console.log(chalk.yellow('Please make sure to add dictionary files to the public/dict directory.'));
+    }
+  } catch (error) {
+    console.error(chalk.red('\nError copying kuromoji dictionary files:'), error);
+  }
+};
 const formatWebpackMessages = require('react-dev-utils/formatWebpackMessages');
 const FileSizeReporter = require('react-dev-utils/FileSizeReporter');
 const printBuildError = require('react-dev-utils/printBuildError');
@@ -77,7 +97,7 @@ function build(previousFileSizes) {
 }
 
 // Create the production build and print the deployment instructions.
-function buildApp() {
+async function buildApp() {
   // First, read the current file sizes in build directory.
   // This lets us display how much they changed later.
   measureFileSizesBeforeBuild(paths.appBuild)
@@ -131,4 +151,20 @@ function buildApp() {
     });
 }
 
-buildApp(); 
+// 执行构建过程
+async function run() {
+  try {
+    // 首先构建应用
+    await buildApp();
+
+    // 然后复制字典文件
+    await copyKuromojiDict();
+
+    console.log(chalk.green('\nBuild completed successfully!'));
+  } catch (error) {
+    console.error(chalk.red('\nBuild failed:'), error);
+    process.exit(1);
+  }
+}
+
+run();
