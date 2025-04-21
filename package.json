@@ -30,7 +30,7 @@
   },
   "scripts": {
     "start": "craco start",
-    "build": "cp craco.config.js build/ && craco build",
+    "build": "mkdir -p build && cp craco.config.js build/ && craco build",
     "test": "craco test",
     "eject": "react-scripts eject"
   },
