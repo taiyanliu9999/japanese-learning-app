@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import React from 'react';
+import type { Dispatch, SetStateAction } from 'react';
+import { useState } from 'react';
 import { Button, Card, Radio, Space, Typography } from 'antd';
 import type { RadioChangeEvent } from 'antd/lib/radio';
 
