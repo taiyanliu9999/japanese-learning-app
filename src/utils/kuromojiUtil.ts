@@ -5,6 +5,7 @@ let tokenizer: any = null;
 export const initializeKuromoji = (): Promise<void> => {
   return new Promise((resolve, reject) => {
     if (tokenizer) {
+      console.log('Tokenizer already initialized');
       resolve();
       return;
     }
@@ -27,18 +28,36 @@ export const initializeKuromoji = (): Promise<void> => {
       const dicPath = dicPaths[index];
       console.log(`尝试从 ${dicPath} 加载kuromoji字典...`);
 
-      kuromoji.builder({ dicPath })
-        .build((err, _tokenizer) => {
-          if (err) {
-            console.warn(`从 ${dicPath} 加载字典失败:`, err);
-            // 尝试下一个路径
-            tryPath(index + 1);
-          } else {
-            console.log(`成功从 ${dicPath} 加载字典`);
-            tokenizer = _tokenizer;
-            resolve();
-          }
-        });
+      try {
+        kuromoji.builder({ dicPath })
+          .build((err, _tokenizer) => {
+            if (err) {
+              console.warn(`从 ${dicPath} 加载字典失败:`, err);
+              // 尝试下一个路径
+              tryPath(index + 1);
+            } else {
+              console.log(`成功从 ${dicPath} 加载字典`);
+              // 验证tokenizer是否正确初始化
+              try {
+                const testResult = _tokenizer.tokenize('テスト');
+                if (Array.isArray(testResult) && testResult.length > 0) {
+                  console.log('Tokenizer测试成功');
+                  tokenizer = _tokenizer;
+                  resolve();
+                } else {
+                  console.warn(`从 ${dicPath} 加载的tokenizer测试失败`);
+                  tryPath(index + 1);
+                }
+              } catch (testError) {
+                console.warn(`Tokenizer测试出错:`, testError);
+                tryPath(index + 1);
+              }
+            }
+          });
+      } catch (buildError) {
+        console.warn(`构建tokenizer时出错:`, buildError);
+        tryPath(index + 1);
+      }
     };
 
     // 开始尝试第一个路径
@@ -50,7 +69,12 @@ export const tokenizeText = (text: string) => {
   if (!tokenizer) {
     throw new Error('Kuromoji not initialized. Call initializeKuromoji() first.');
   }
-  return tokenizer.tokenize(text);
+  try {
+    return tokenizer.tokenize(text);
+  } catch (error) {
+    console.error('Tokenization error:', error);
+    throw error;
+  }
 };
 
 export interface KuromojiToken {
