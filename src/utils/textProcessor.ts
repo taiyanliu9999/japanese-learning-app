@@ -11,16 +11,42 @@ let tokenizer: any = null;
 
 const initializeTokenizer = async () => {
   if (!tokenizer) {
-    tokenizer = await new Promise((resolve, reject) => {
-      kuromoji.builder({ dicPath: process.env.PUBLIC_URL + '/dict' }).build((err, _tokenizer) => {
-        if (err) {
-          console.error('Failed to initialize tokenizer:', err);
-          reject(err);
-        } else {
-          resolve(_tokenizer);
+    try {
+      // Try different dictionary paths
+      const dicPaths = [
+        '/dict',  // Production path
+        process.env.PUBLIC_URL ? process.env.PUBLIC_URL + '/dict' : null, // Development path
+        './dict'  // Fallback path
+      ].filter(Boolean);
+
+      for (const dicPath of dicPaths) {
+        try {
+          tokenizer = await new Promise((resolve, reject) => {
+            console.log('Attempting to load dictionary from:', dicPath);
+            kuromoji.builder({ dicPath }).build((err, _tokenizer) => {
+              if (err) {
+                console.error('Failed to load dictionary from', dicPath, ':', err);
+                reject(err);
+              } else {
+                console.log('Successfully loaded dictionary from:', dicPath);
+                resolve(_tokenizer);
+              }
+            });
+          });
+          break; // Break the loop if successful
+        } catch (err) {
+          console.warn('Failed to load dictionary from', dicPath, ', trying next path');
+          continue;
         }
-      });
-    });
+      }
+
+      if (!tokenizer) {
+        throw new Error('Failed to load kuromoji dictionary from any path');
+      }
+    } catch (error) {
+      console.error('Failed to initialize tokenizer:', error);
+      throw error;
+    }
   }
   return tokenizer;
 };

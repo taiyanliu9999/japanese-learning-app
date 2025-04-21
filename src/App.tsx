@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ConfigProvider } from 'antd';
 import { AppLayout } from './components/layout/AppLayout';
@@ -6,6 +6,7 @@ import { JapaneseLearning } from './components/JapaneseLearning';
 import { WordList } from './components/vocabulary/WordList';
 import { UserSettings } from './components/settings/UserSettings';
 import { Statistics } from './components/progress/Statistics';
+import { initializeKuromoji } from './utils/kuromojiUtil';
 import 'antd/dist/reset.css';
 import './App.css';
 
@@ -16,6 +17,19 @@ const App = () => {
     毎日新しい単語を覚えます。
     日本の文化にも興味があります。
   `;
+
+  useEffect(() => {
+    const initKuromoji = async () => {
+      try {
+        await initializeKuromoji();
+        console.log('Kuromoji initialized successfully');
+      } catch (error) {
+        console.error('Failed to initialize Kuromoji:', error);
+      }
+    };
+
+    initKuromoji();
+  }, []);
 
   return (
     <ConfigProvider
