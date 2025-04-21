@@ -1,5 +1,4 @@
 import React from 'react';
-import type { Dispatch, SetStateAction } from 'react';
 import { useState } from 'react';
 import { Button, Card, Radio, Space, Typography } from 'antd';
 import type { RadioChangeEvent } from 'antd/lib/radio';
@@ -12,12 +11,14 @@ interface QuizSectionProps {
   }[];
 }
 
+type Answers = { [key: number]: string };
+
 export const QuizSection = ({ quizData }: QuizSectionProps): JSX.Element => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState('');
   const [showResult, setShowResult] = useState(false);
   const [score, setScore] = useState(0);
-  const [answers, setAnswers] = useState({} as Record<number, string>);
+  const [answers, setAnswers] = useState({} as Answers);
 
   const handleAnswerSelect = (e: RadioChangeEvent) => {
     setSelectedAnswer(e.target.value);
