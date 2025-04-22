@@ -1,38 +1,5 @@
 {
-  "routes": [
-    {
-      "src": "/static/(.*)",
-      "headers": { "cache-control": "public,max-age=31536000,immutable" },
-      "dest": "/static/$1"
-    },
-    {
-      "src": "/dict/(.*)",
-      "dest": "/dict/$1",
-      "headers": {
-        "Cache-Control": "public, max-age=31536000, immutable"
-      }
-    },
-    {
-      "src": "/manifest.json",
-      "headers": { "cache-control": "public,max-age=0,must-revalidate" },
-      "dest": "/manifest.json"
-    },
-    {
-      "src": "/favicon.ico",
-      "headers": { "cache-control": "public,max-age=0,must-revalidate" },
-      "dest": "/favicon.ico"
-    },
-    {
-      "src": "/logo(.*).png",
-      "headers": { "cache-control": "public,max-age=31536000,immutable" },
-      "dest": "/logo$1.png"
-    },
-    {
-      "src": "/(.*)",
-      "headers": { "cache-control": "no-cache" },
-      "dest": "/index.html"
-    }
-  ],
+  "version": 2,
   "builds": [
     {
       "src": "package.json",
@@ -40,6 +7,40 @@
       "config": {
         "distDir": "build"
       }
+    }
+  ],
+  "routes": [
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/static/(.*)",
+      "dest": "/static/$1"
+    },
+    {
+      "src": "/dict/(.*)",
+      "dest": "/dict/$1"
+    },
+    {
+      "src": "/manifest.json",
+      "dest": "/manifest.json",
+      "headers": {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET",
+        "Content-Type": "application/json"
+      }
+    },
+    {
+      "src": "/favicon.ico",
+      "dest": "/favicon.ico"
+    },
+    {
+      "src": "/logo(.*).png",
+      "dest": "/logo$1.png"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
     }
   ]
 } 
