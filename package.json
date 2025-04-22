@@ -33,9 +33,12 @@
   },
   "scripts": {
     "start": "cross-env BROWSER=none craco start",
-    "build": "cross-env CI=false TSC_COMPILE_ON_ERROR=true GENERATE_SOURCEMAP=false NODE_ENV=production craco build",
+    "build": "cross-env CI=false TSC_COMPILE_ON_ERROR=true GENERATE_SOURCEMAP=false NODE_ENV=production craco build && npm run copy-dict",
     "test": "cross-env craco test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "copy-dict": "node scripts/copy-dict.js",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build"
   },
   "eslintConfig": {
     "extends": [
