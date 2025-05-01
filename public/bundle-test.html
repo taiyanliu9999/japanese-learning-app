@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bundle Test Page</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    .card {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 16px;
+      background-color: #f9f9f9;
+    }
+    .success { color: #52c41a; }
+    .error { color: #ff4d4f; }
+    .pending { color: #1677ff; }
+    button {
+      background-color: #1677ff;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-right: 8px;
+      margin-bottom: 8px;
+    }
+    pre {
+      background-color: #f0f0f0;
+      padding: 10px;
+      border-radius: 4px;
+      overflow-x: auto;
+    }
+  </style>
+  <script src="/webpack-polyfills.js"></script>
+  <script src="/env.js"></script>
+</head>
+<body>
+  <h1>JavaScript Bundle Test</h1>
+  
+  <div class="card">
+    <h2>Environment Information</h2>
+    <div id="env-info">Loading...</div>
+  </div>
+  
+  <div class="card">
+    <h2>Bundle Tests</h2>
+    <div>
+      <button id="test-main">Test main.bundle.js</button>
+      <button id="test-manifest">Test manifest.json</button>
+      <button id="test-env">Test env.js</button>
+    </div>
+    <div id="bundle-results">Select a test to run</div>
+  </div>
+  
+  <div class="card">
+    <h2>HTTP Headers</h2>
+    <div id="headers-info">Click a button below to check headers</div>
+    <div>
+      <button id="check-js-headers">Check JS File Headers</button>
+      <button id="check-html-headers">Check HTML Headers</button>
+    </div>
+  </div>
+  
+  <div class="card">
+    <h2>Content Type Test</h2>
+    <div id="content-type-results">No test run yet</div>
+    <button id="test-content-types">Run Content Type Tests</button>
+  </div>
+  
+  <script>
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+      // Show environment info
+      const envInfo = document.getElementById('env-info');
+      const envDisplay = [];
+      
+      envDisplay.push(`<p><strong>URL:</strong> ${window.location.href}</p>`);
+      envDisplay.push(`<p><strong>window.env exists:</strong> ${window.env ? 'Yes' : 'No'}</p>`);
+      
+      if (window.env) {
+        envDisplay.push(`<p><strong>Build Time:</strong> ${window.env.REACT_APP_BUILD_TIME || 'Not set'}</p>`);
+        envDisplay.push(`<p><strong>Supabase URL:</strong> ${window.env.REACT_APP_SUPABASE_URL ? window.env.REACT_APP_SUPABASE_URL.substring(0, 15) + '...' : 'Not set'}</p>`);
+        envDisplay.push(`<p><strong>window.env keys:</strong> ${Object.keys(window.env).join(', ')}</p>`);
+      }
+      
+      envInfo.innerHTML = envDisplay.join('');
+      
+      // Test main bundle
+      document.getElementById('test-main').addEventListener('click', function() {
+        const results = document.getElementById('bundle-results');
+        results.innerHTML = '<p class="pending">Testing main.bundle.js...</p>';
+        
+        fetch('/static/js/main.bundle.js')
+          .then(response => {
+            if (!response.ok) throw new Error(`HTTP error ${response.status}`);
+            return response.text();
+          })
+          .then(text => {
+            const isJS = text.trim().startsWith('!function') || text.includes('window') || text.includes('function');
+            const isHTML = text.trim().startsWith('<!DOCTYPE') || text.trim().startsWith('<html');
+            
+            if (isJS) {
+              results.innerHTML = '<p class="success">✅ main.bundle.js loaded successfully and contains JavaScript</p>';
+            } else if (isHTML) {
+              results.innerHTML = '<p class="error">❌ main.bundle.js returned HTML content instead of JavaScript</p>';
+              results.innerHTML += `<p>First 200 characters:</p><pre>${text.substring(0, 200)}</pre>`;
+            } else {
+              results.innerHTML = '<p class="error">❌ main.bundle.js has unknown content</p>';
+              results.innerHTML += `<p>First 200 characters:</p><pre>${text.substring(0, 200)}</pre>`;
+            }
+          })
+          .catch(error => {
+            results.innerHTML = `<p class="error">❌ Error loading main.bundle.js: ${error.message}</p>`;
+          });
+      });
+      
+      // Test manifest.json
+      document.getElementById('test-manifest').addEventListener('click', function() {
+        const results = document.getElementById('bundle-results');
+        results.innerHTML = '<p class="pending">Testing manifest.json...</p>';
+        
+        fetch('/manifest.json')
+          .then(response => {
+            if (!response.ok) throw new Error(`HTTP error ${response.status}`);
+            return response.text();
+          })
+          .then(text => {
+            try {
+              const json = JSON.parse(text);
+              results.innerHTML = '<p class="success">✅ manifest.json loaded successfully and is valid JSON</p>';
+              results.innerHTML += `<pre>${JSON.stringify(json, null, 2)}</pre>`;
+            } catch (e) {
+              results.innerHTML = '<p class="error">❌ manifest.json is not valid JSON</p>';
+              results.innerHTML += `<p>Content:</p><pre>${text}</pre>`;
+            }
+          })
+          .catch(error => {
+            results.innerHTML = `<p class="error">❌ Error loading manifest.json: ${error.message}</p>`;
+          });
+      });
+      
+      // Test env.js
+      document.getElementById('test-env').addEventListener('click', function() {
+        const results = document.getElementById('bundle-results');
+        results.innerHTML = '<p class="pending">Testing env.js...</p>';
+        
+        fetch('/env.js')
+          .then(response => {
+            if (!response.ok) throw new Error(`HTTP error ${response.status}`);
+            return response.text();
+          })
+          .then(text => {
+            results.innerHTML = '<p class="success">✅ env.js loaded</p>';
+            results.innerHTML += `<pre>${text}</pre>`;
+          })
+          .catch(error => {
+            results.innerHTML = `<p class="error">❌ Error loading env.js: ${error.message}</p>`;
+          });
+      });
+      
+      // Check JS file headers
+      document.getElementById('check-js-headers').addEventListener('click', function() {
+        const headersInfo = document.getElementById('headers-info');
+        headersInfo.innerHTML = '<p class="pending">Checking headers for main.bundle.js...</p>';
+        
+        fetch('/static/js/main.bundle.js', { method: 'HEAD' })
+          .then(response => {
+            const headers = Array.from(response.headers.entries());
+            headersInfo.innerHTML = '<p class="success">✅ Headers for main.bundle.js:</p>';
+            headersInfo.innerHTML += '<pre>' + headers.map(h => `${h[0]}: ${h[1]}`).join('\n') + '</pre>';
+          })
+          .catch(error => {
+            headersInfo.innerHTML = `<p class="error">❌ Error checking headers: ${error.message}</p>`;
+          });
+      });
+      
+      // Check HTML file headers
+      document.getElementById('check-html-headers').addEventListener('click', function() {
+        const headersInfo = document.getElementById('headers-info');
+        headersInfo.innerHTML = '<p class="pending">Checking headers for index.html...</p>';
+        
+        fetch('/', { method: 'HEAD' })
+          .then(response => {
+            const headers = Array.from(response.headers.entries());
+            headersInfo.innerHTML = '<p class="success">✅ Headers for index.html:</p>';
+            headersInfo.innerHTML += '<pre>' + headers.map(h => `${h[0]}: ${h[1]}`).join('\n') + '</pre>';
+          })
+          .catch(error => {
+            headersInfo.innerHTML = `<p class="error">❌ Error checking headers: ${error.message}</p>`;
+          });
+      });
+      
+      // Test content types
+      document.getElementById('test-content-types').addEventListener('click', function() {
+        const results = document.getElementById('content-type-results');
+        results.innerHTML = '<p class="pending">Testing content types...</p>';
+        
+        const tests = [
+          { url: '/static/js/main.bundle.js', expected: 'application/javascript' },
+          { url: '/manifest.json', expected: 'application/json' },
+          { url: '/env.js', expected: 'application/javascript' },
+          { url: '/', expected: 'text/html' }
+        ];
+        
+        Promise.all(tests.map(test => 
+          fetch(test.url, { method: 'HEAD' })
+            .then(response => ({
+              url: test.url,
+              expected: test.expected,
+              actual: response.headers.get('content-type'),
+              ok: response.ok
+            }))
+            .catch(error => ({
+              url: test.url,
+              expected: test.expected,
+              error: error.message,
+              ok: false
+            }))
+        ))
+        .then(results => {
+          const html = results.map(result => {
+            if (!result.ok) {
+              return `<p class="error">❌ ${result.url}: Error - ${result.error}</p>`;
+            }
+            
+            const match = result.actual && result.actual.includes(result.expected);
+            return `<p class="${match ? 'success' : 'error'}">
+              ${match ? '✅' : '❌'} ${result.url}: 
+              Expected: ${result.expected}, 
+              Actual: ${result.actual || 'none'}
+            </p>`;
+          });
+          
+          document.getElementById('content-type-results').innerHTML = html.join('');
+        });
+      });
+    });
+  </script>
+</body>
+</html> 

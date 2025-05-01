@@ -14,14 +14,14 @@ interface TestStatus {
   message: string;
 }
 
-export const DebugInfo: React.FC<DebugInfoProps> = ({ showDetails = true }) => {
-  const [envInfo, setEnvInfo] = useState<Record<string, any>>({});
-  const [supabaseTest, setSupabaseTest] = useState<TestStatus>({
-    status: 'idle',
+export const DebugInfo = ({ showDetails = true }: DebugInfoProps): JSX.Element => {
+  const [envInfo, setEnvInfo] = useState({} as Record<string, any>);
+  const [supabaseTest, setSupabaseTest] = useState({
+    status: 'idle' as StatusType,
     message: 'Not tested'
   });
-  const [dictTest, setDictTest] = useState<TestStatus>({
-    status: 'idle',
+  const [dictTest, setDictTest] = useState({
+    status: 'idle' as StatusType,
     message: 'Not tested'
   });
 

@@ -1,1 +1,9 @@
-/* /index.html 200 
+# Redirects for static assets
+/static/*              /static/:splat                200
+/dict/*                /dict/:splat                  200
+/*.js                  /:splat.js                    200
+/*.css                 /:splat.css                   200
+/*.json                /:splat.json                  200
+/*.ico                 /:splat.ico                   200
+/*.png                 /:splat.png                   200
+/*                     /index.html                   200 
