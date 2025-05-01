@@ -4,6 +4,7 @@ import { FlashcardSection } from './FlashcardSection';
 import { ReadingSection } from './ReadingSection';
 import { QuizSection } from './QuizSection';
 import { processJapaneseText } from '../utils/textProcessor';
+import DebugInfo from './DebugInfo';
 
 const { Title } = Typography;
 
@@ -17,6 +18,10 @@ export const JapaneseLearning = ({ text }: JapaneseLearningProps): JSX.Element =
     sentences: [],
     quizzes: []
   });
+  const [showDebug, setShowDebug] = useState(
+    process.env.NODE_ENV !== 'production' || 
+    window.location.search.includes('debug=true')
+  );
 
   useEffect(() => {
     const processed = processJapaneseText(text);
@@ -45,9 +50,19 @@ export const JapaneseLearning = ({ text }: JapaneseLearningProps): JSX.Element =
   ];
 
   return (
-    <Card>
-      <Title level={2}>日本語学習</Title>
-      <Tabs defaultActiveKey="flashcards" items={items} />
-    </Card>
+    <>
+      {showDebug && <DebugInfo />}
+      <Card>
+        <Title level={2}>日本語学習</Title>
+        {process.env.NODE_ENV !== 'production' && (
+          <div style={{ marginBottom: 16 }}>
+            <a href="#" onClick={(e) => { e.preventDefault(); setShowDebug(!showDebug); }}>
+              {showDebug ? 'Hide Debug Info' : 'Show Debug Info'}
+            </a>
+          </div>
+        )}
+        <Tabs defaultActiveKey="flashcards" items={items} />
+      </Card>
+    </>
   );
 }; 

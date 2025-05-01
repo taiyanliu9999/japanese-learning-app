@@ -15,14 +15,23 @@ declare global {
 const getEnvVariable = (key: string) => {
   // First try window.env (set by our setup-env.js script)
   if (window.env && window.env[`REACT_APP_${key}`]) {
+    console.log(`Found ${key} in window.env`);
     return window.env[`REACT_APP_${key}`];
   }
 
   // Then try different process.env formats
-  return process.env[key] || 
+  const value = process.env[key] || 
          process.env[`REACT_APP_${key}`] || 
          process.env[`VITE_${key}`] ||
          process.env[`NEXT_PUBLIC_${key}`];
+  
+  if (value) {
+    console.log(`Found ${key} in process.env`);
+    return value;
+  }
+
+  console.log(`${key} not found in any environment variables`);
+  return null;
 };
 
 // Hard-coded fallbacks as last resort
@@ -30,16 +39,43 @@ const FALLBACK_URL = 'https://tvminksjqvdhamspxtoh.supabase.co';
 const FALLBACK_KEY = 'eyJhbGciOiJIUzI1NiIsInJlZiI6InR2bWlua3NqcXZkaGFtc3B4dG9oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxMTk3MzMsImV4cCI6MjA2MTY5NTczM30.w_Q-fJBymmrCFPvbOseU0rAAvOMTwd9HuJ4a0R9z3Rk';
 
 // Get environment variables with debugging
-const supabaseUrl = getEnvVariable('SUPABASE_URL') || FALLBACK_URL;
-const supabaseAnonKey = getEnvVariable('SUPABASE_ANON_KEY') || FALLBACK_KEY;
+let supabaseUrl = getEnvVariable('SUPABASE_URL');
+let supabaseAnonKey = getEnvVariable('SUPABASE_ANON_KEY');
+
+// If not found, check if window.env exists directly with the full key names
+if (!supabaseUrl && window.env && window.env.REACT_APP_SUPABASE_URL) {
+  console.log('Using direct window.env.REACT_APP_SUPABASE_URL');
+  supabaseUrl = window.env.REACT_APP_SUPABASE_URL;
+}
+
+if (!supabaseAnonKey && window.env && window.env.REACT_APP_SUPABASE_ANON_KEY) {
+  console.log('Using direct window.env.REACT_APP_SUPABASE_ANON_KEY');
+  supabaseAnonKey = window.env.REACT_APP_SUPABASE_ANON_KEY;
+}
+
+// Use fallbacks if still not found
+if (!supabaseUrl) {
+  console.log('Using hardcoded fallback for Supabase URL');
+  supabaseUrl = FALLBACK_URL;
+}
+
+if (!supabaseAnonKey) {
+  console.log('Using hardcoded fallback for Supabase Anon Key');
+  supabaseAnonKey = FALLBACK_KEY;
+}
+
+// Show full window.env content for debugging
+console.log('window.env content:', window.env);
 
 // Log environment variable status (without revealing actual keys)
 console.log('Supabase configuration status:', {
-  url: supabaseUrl ? 'configured' : 'not configured',
-  key: supabaseAnonKey ? 'configured' : 'not configured',
+  url: supabaseUrl,
+  urlConfigured: !!supabaseUrl,
+  keyConfigured: !!supabaseAnonKey,
+  keyLength: supabaseAnonKey ? supabaseAnonKey.length : 0,
   source: window.env ? 'window.env' : 'process.env',
   environment: process.env.NODE_ENV,
-  buildTime: process.env.REACT_APP_BUILD_TIME || window.env?.REACT_APP_BUILD_TIME || 'not set',
+  buildTime: process.env.REACT_APP_BUILD_TIME || (window.env?.REACT_APP_BUILD_TIME || 'not set'),
   windowEnvKeys: window.env ? Object.keys(window.env) : [],
   processEnvKeys: Object.keys(process.env).filter(key => key.includes('SUPABASE') || key.includes('REACT_APP')),
 });
@@ -47,7 +83,7 @@ console.log('Supabase configuration status:', {
 // Check if we have valid configuration
 const hasValidConfig = !!(supabaseUrl && supabaseAnonKey);
 
-// Create Supabase client (even without config to prevent runtime errors)
+// Create Supabase client
 export const supabase = createClient(
   supabaseUrl,
   supabaseAnonKey,
