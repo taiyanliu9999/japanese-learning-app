@@ -10,29 +10,45 @@ export const initializeKuromoji = (): Promise<void> => {
       return;
     }
 
-    // 尝试多个可能的字典路径
+    // 详细记录当前环境
+    console.log('当前环境信息:');
+    console.log('PUBLIC_URL:', process.env.PUBLIC_URL);
+    console.log('NODE_ENV:', process.env.NODE_ENV);
+    console.log('BASE_URL:', window.location.origin);
+    console.log('Current URL:', window.location.href);
+
+    // 尝试多个可能的字典路径，调整顺序
     const dicPaths = [
-      '/dict',  // 生产环境路径
-      process.env.PUBLIC_URL ? `${process.env.PUBLIC_URL}/dict` : null, // 开发环境路径
-      './dict',  // 备用路径
-      'dict'     // 相对路径
+      './dict',   // 先尝试相对路径
+      'dict',     // 简单路径
+      '/dict',    // 绝对路径
+      `${window.location.origin}/dict`, // 完整URL路径
+      process.env.PUBLIC_URL ? `${process.env.PUBLIC_URL}/dict` : null, // 环境变量路径
     ].filter(Boolean);
+
+    console.log('将尝试以下字典路径:', dicPaths);
 
     // 尝试每个路径，直到成功
     const tryPath = (index: number) => {
       if (index >= dicPaths.length) {
-        reject(new Error('无法加载kuromoji字典，尝试了所有可能的路径'));
+        const errorMsg = '无法加载kuromoji字典，尝试了所有可能的路径';
+        console.error(errorMsg, dicPaths);
+        reject(new Error(errorMsg));
         return;
       }
 
       const dicPath = dicPaths[index];
-      console.log(`尝试从 ${dicPath} 加载kuromoji字典...`);
+      console.log(`[${index + 1}/${dicPaths.length}] 尝试从 ${dicPath} 加载kuromoji字典...`);
 
       try {
         kuromoji.builder({ dicPath })
           .build((err, _tokenizer) => {
             if (err) {
               console.warn(`从 ${dicPath} 加载字典失败:`, err);
+              // 记录详细的错误信息
+              if (err instanceof Error) {
+                console.error('错误详情:', err.message, err.stack);
+              }
               // 尝试下一个路径
               tryPath(index + 1);
             } else {
@@ -41,11 +57,11 @@ export const initializeKuromoji = (): Promise<void> => {
               try {
                 const testResult = _tokenizer.tokenize('テスト');
                 if (Array.isArray(testResult) && testResult.length > 0) {
-                  console.log('Tokenizer测试成功');
+                  console.log('Tokenizer测试成功:', testResult);
                   tokenizer = _tokenizer;
                   resolve();
                 } else {
-                  console.warn(`从 ${dicPath} 加载的tokenizer测试失败`);
+                  console.warn(`从 ${dicPath} 加载的tokenizer测试失败:`, testResult);
                   tryPath(index + 1);
                 }
               } catch (testError) {
