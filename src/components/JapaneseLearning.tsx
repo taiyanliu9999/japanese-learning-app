@@ -4,7 +4,7 @@ import { FlashcardSection } from './FlashcardSection';
 import { ReadingSection } from './ReadingSection';
 import { QuizSection } from './QuizSection';
 import { processJapaneseText } from '../utils/textProcessor';
-import DebugInfo from './DebugInfo';
+import { DebugInfo } from './DebugInfo';
 
 const { Title } = Typography;
 
@@ -51,7 +51,7 @@ export const JapaneseLearning = ({ text }: JapaneseLearningProps): JSX.Element =
 
   return (
     <>
-      {showDebug && <DebugInfo />}
+      {showDebug && <DebugInfo showDetails={true} />}
       <Card>
         <Title level={2}>日本語学習</Title>
         {process.env.NODE_ENV !== 'production' && (

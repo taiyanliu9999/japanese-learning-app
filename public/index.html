@@ -14,9 +14,129 @@
     <script src="%PUBLIC_URL%/webpack-polyfills.js"></script>
     <script src="%PUBLIC_URL%/env.js"></script>
     <title>Japanese Learning App</title>
+    <style>
+      .standalone-debug {
+        margin: 20px;
+        padding: 15px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        background-color: #f9f9f9;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      }
+      .debug-hidden { display: none; }
+      .debug-error { color: #ff4d4f; }
+      .debug-title { font-size: 18px; font-weight: bold; margin-bottom: 10px; }
+      .debug-section { margin-bottom: 15px; }
+      .debug-button {
+        background-color: #1890ff;
+        color: white;
+        border: none;
+        padding: 5px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-right: 8px;
+      }
+    </style>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
+    
+    <!-- Standalone debug div that works even if React fails to load -->
+    <div id="standalone-debug" class="standalone-debug debug-hidden">
+      <div class="debug-title">Application Status</div>
+      <div class="debug-section" id="env-info">Loading environment information...</div>
+      <div class="debug-section">
+        <button class="debug-button" id="test-supabase">Test Supabase</button>
+        <button class="debug-button" id="test-dict">Test Dictionary</button>
+        <button class="debug-button" id="toggle-debug">Hide Debug Info</button>
+      </div>
+      <div class="debug-section" id="test-results"></div>
+    </div>
+    
     <div id="root"></div>
+    
+    <script>
+      // Simple debug script that works even if React fails
+      document.addEventListener('DOMContentLoaded', function() {
+        // Only show standalone debug if URL has debug=true or we're in a non-production environment
+        const shouldShowDebug = 
+          window.location.search.includes('debug=true') || 
+          (window.env && window.env.NODE_ENV !== 'production');
+        
+        if (shouldShowDebug) {
+          const debugDiv = document.getElementById('standalone-debug');
+          debugDiv.classList.remove('debug-hidden');
+          
+          // Environment info
+          const envDiv = document.getElementById('env-info');
+          const envInfo = [];
+          
+          // Check Supabase config
+          const supabaseUrl = window.env && window.env.REACT_APP_SUPABASE_URL || 'Not configured';
+          const supabaseKey = window.env && window.env.REACT_APP_SUPABASE_ANON_KEY ? 'Configured' : 'Not configured';
+          
+          envInfo.push(`<div><strong>URL:</strong> ${window.location.href}</div>`);
+          envInfo.push(`<div><strong>Supabase URL:</strong> ${supabaseUrl.substring(0, 15)}...</div>`);
+          envInfo.push(`<div><strong>Supabase Key:</strong> ${supabaseKey}</div>`);
+          envInfo.push(`<div><strong>Build Time:</strong> ${window.env ? window.env.REACT_APP_BUILD_TIME || 'Not set' : 'Not set'}</div>`);
+          
+          envDiv.innerHTML = envInfo.join('');
+          
+          // Setup toggle button
+          document.getElementById('toggle-debug').addEventListener('click', function() {
+            debugDiv.classList.toggle('debug-hidden');
+          });
+          
+          // Test Supabase
+          document.getElementById('test-supabase').addEventListener('click', function() {
+            const resultsDiv = document.getElementById('test-results');
+            resultsDiv.innerHTML = 'Testing Supabase connection...';
+            
+            const url = window.env && window.env.REACT_APP_SUPABASE_URL;
+            const key = window.env && window.env.REACT_APP_SUPABASE_ANON_KEY;
+            
+            if (!url || !key) {
+              resultsDiv.innerHTML = '<div class="debug-error">Supabase credentials not configured</div>';
+              return;
+            }
+            
+            fetch(`${url}/rest/v1/`, {
+              headers: {
+                'apikey': key,
+                'Authorization': `Bearer ${key}`
+              }
+            })
+            .then(response => {
+              if (!response.ok) throw new Error(`HTTP error ${response.status}`);
+              return response.json();
+            })
+            .then(data => {
+              resultsDiv.innerHTML = `<div>Supabase connected successfully!</div>`;
+            })
+            .catch(error => {
+              resultsDiv.innerHTML = `<div class="debug-error">Supabase error: ${error.message}</div>`;
+            });
+          });
+          
+          // Test Dictionary
+          document.getElementById('test-dict').addEventListener('click', function() {
+            const resultsDiv = document.getElementById('test-results');
+            resultsDiv.innerHTML = 'Testing dictionary access...';
+            
+            fetch('/dict/test-access.txt')
+              .then(response => {
+                if (!response.ok) throw new Error(`HTTP error ${response.status}`);
+                return response.text();
+              })
+              .then(text => {
+                resultsDiv.innerHTML = `<div>Dictionary access successful: ${text.substring(0, 50)}</div>`;
+              })
+              .catch(error => {
+                resultsDiv.innerHTML = `<div class="debug-error">Dictionary access error: ${error.message}</div>`;
+              });
+          });
+        }
+      });
+    </script>
   </body>
 </html> 

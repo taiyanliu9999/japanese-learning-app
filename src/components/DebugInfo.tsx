@@ -1,144 +1,200 @@
 import React, { useEffect, useState } from 'react';
-import { Card, Typography, Space, Divider, Button } from 'antd';
-import { supabase } from '../utils/auth';
+import { Card, Typography, Button, Space, Divider, Alert, List } from 'antd';
 
 const { Title, Text, Paragraph } = Typography;
 
-interface DebugInfo {
-  env: {
-    window: Record<string, any>;
-    process: string[];
-  };
-  supabase: {
-    url: string;
-    configured: boolean;
-  };
-  build: {
-    time: string;
-    env: string;
-  };
-  network: {
-    online: boolean;
-    url: string;
-  };
+interface DebugInfoProps {
+  showDetails?: boolean;
 }
 
-const DebugInfo = () => {
-  const [info, setInfo] = useState({
-    env: { window: {}, process: [] },
-    supabase: { url: '', configured: false },
-    build: { time: '', env: '' },
-    network: { online: false, url: '' }
+type StatusType = 'idle' | 'loading' | 'success' | 'error';
+
+interface TestStatus {
+  status: StatusType;
+  message: string;
+}
+
+export const DebugInfo: React.FC<DebugInfoProps> = ({ showDetails = true }) => {
+  const [envInfo, setEnvInfo] = useState<Record<string, any>>({});
+  const [supabaseTest, setSupabaseTest] = useState<TestStatus>({
+    status: 'idle',
+    message: 'Not tested'
   });
-  const [authStatus, setAuthStatus] = useState('unknown');
-  const [expanded, setExpanded] = useState(false);
+  const [dictTest, setDictTest] = useState<TestStatus>({
+    status: 'idle',
+    message: 'Not tested'
+  });
 
   useEffect(() => {
-    // Collect debug info
-    const windowEnv = window.env || {};
+    // Collect environment information
+    const env = window.env || {};
+    const supabaseUrl = env.REACT_APP_SUPABASE_URL || process.env.REACT_APP_SUPABASE_URL || '';
+    const supabaseKey = env.REACT_APP_SUPABASE_ANON_KEY || process.env.REACT_APP_SUPABASE_ANON_KEY || '';
     
-    const debugInfo = {
-      env: {
-        window: windowEnv,
-        process: Object.keys(process.env).filter(k => k.startsWith('REACT_APP_'))
-      },
-      supabase: {
-        url: windowEnv.REACT_APP_SUPABASE_URL || process.env.REACT_APP_SUPABASE_URL || '',
-        configured: !!(windowEnv.REACT_APP_SUPABASE_URL || process.env.REACT_APP_SUPABASE_URL)
-      },
-      build: {
-        time: windowEnv.REACT_APP_BUILD_TIME || process.env.REACT_APP_BUILD_TIME || '',
-        env: process.env.NODE_ENV || ''
-      },
-      network: {
-        online: navigator.onLine,
-        url: window.location.href
-      }
-    };
-    
-    setInfo(debugInfo);
-    
-    // Check auth status
-    const checkAuth = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        setAuthStatus(session ? 'authenticated' : 'not authenticated');
-      } catch (error) {
-        setAuthStatus(`error: ${error instanceof Error ? error.message : String(error)}`);
-      }
-    };
-    
-    checkAuth();
+    setEnvInfo({
+      url: window.location.href,
+      origin: window.location.origin,
+      supabaseUrl: supabaseUrl.substring(0, 15) + '...',
+      supabaseKeyConfigured: !!supabaseKey,
+      windowEnvExists: !!window.env,
+      processBuildTime: process.env.REACT_APP_BUILD_TIME || 'Not set',
+      windowBuildTime: window.env?.REACT_APP_BUILD_TIME || 'Not set',
+      processEnvKeys: Object.keys(process.env).filter(k => k.startsWith('REACT_APP')),
+      windowEnvKeys: window.env ? Object.keys(window.env) : []
+    });
   }, []);
 
+  const testSupabaseConnection = async () => {
+    setSupabaseTest({ status: 'loading', message: 'Testing Supabase connection...' });
+    
+    try {
+      const env = window.env || {};
+      const supabaseUrl = env.REACT_APP_SUPABASE_URL || process.env.REACT_APP_SUPABASE_URL;
+      const supabaseKey = env.REACT_APP_SUPABASE_ANON_KEY || process.env.REACT_APP_SUPABASE_ANON_KEY;
+      
+      if (!supabaseUrl || !supabaseKey) {
+        setSupabaseTest({ 
+          status: 'error', 
+          message: 'Supabase credentials not configured' 
+        });
+        return;
+      }
+      
+      const response = await fetch(`${supabaseUrl}/rest/v1/`, {
+        headers: {
+          'apikey': supabaseKey,
+          'Authorization': `Bearer ${supabaseKey}`
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error ${response.status}`);
+      }
+      
+      const data = await response.json();
+      setSupabaseTest({ 
+        status: 'success', 
+        message: `Connection successful: ${JSON.stringify(data).substring(0, 50)}...` 
+      });
+    } catch (error) {
+      setSupabaseTest({ 
+        status: 'error', 
+        message: `Connection failed: ${error instanceof Error ? error.message : String(error)}` 
+      });
+    }
+  };
+
+  const testDictAccess = async () => {
+    setDictTest({ status: 'loading', message: 'Testing dictionary access...' });
+    
+    try {
+      const dictPaths = [
+        '/dict/test-access.txt',
+        '/dict/README.md',
+        '/dict/unk.dat.gz'
+      ];
+      
+      for (const path of dictPaths) {
+        const response = await fetch(path);
+        if (response.ok) {
+          setDictTest({ 
+            status: 'success', 
+            message: `Successfully accessed ${path}` 
+          });
+          return;
+        }
+      }
+      
+      setDictTest({ 
+        status: 'error', 
+        message: 'Could not access any dictionary files' 
+      });
+    } catch (error) {
+      setDictTest({ 
+        status: 'error', 
+        message: `Dictionary access failed: ${error instanceof Error ? error.message : String(error)}` 
+      });
+    }
+  };
+
+  const renderStatus = (status: StatusType, message: string) => {
+    const colors = {
+      idle: '#999',
+      loading: '#1677ff',
+      success: '#52c41a',
+      error: '#ff4d4f'
+    };
+    
+    return (
+      <Text style={{ color: colors[status] }}>
+        {status === 'loading' ? '⏳' : status === 'success' ? '✅' : status === 'error' ? '❌' : '🔄'} {message}
+      </Text>
+    );
+  };
+
   return (
-    <Card 
-      title="Application Debug Info" 
-      size="small"
-      style={{ marginBottom: 20, opacity: 0.9 }}
-      extra={<Button type="link" onClick={() => setExpanded(!expanded)}>{expanded ? 'Hide Details' : 'Show Details'}</Button>}
-    >
+    <Card title="Debug Information" style={{ marginBottom: 16 }}>
       <Space direction="vertical" style={{ width: '100%' }}>
+        <Title level={4}>Environment</Title>
         <Paragraph>
-          <Text strong>Supabase URL:</Text> {info.supabase.url ? `${info.supabase.url.substring(0, 15)}...` : 'Not configured'}
+          <Text strong>Current URL:</Text> {envInfo.url}
+        </Paragraph>
+        <Paragraph>
+          <Text strong>Supabase URL:</Text> {envInfo.supabaseUrl}
+        </Paragraph>
+        <Paragraph>
+          <Text strong>Supabase Key Configured:</Text> {envInfo.supabaseKeyConfigured ? 'Yes' : 'No'}
+        </Paragraph>
+        <Paragraph>
+          <Text strong>window.env Available:</Text> {envInfo.windowEnvExists ? 'Yes' : 'No'}
         </Paragraph>
         
-        <Paragraph>
-          <Text strong>Authentication Status:</Text> {authStatus}
-        </Paragraph>
-        
-        <Paragraph>
-          <Text strong>Build Time:</Text> {info.build.time || 'Unknown'}
-        </Paragraph>
-        
-        <Paragraph>
-          <Text strong>Environment:</Text> {info.build.env}
-        </Paragraph>
-        
-        {expanded && (
+        {showDetails && (
           <>
-            <Divider style={{ margin: '8px 0' }} />
-            
-            <Title level={5}>Window Environment Variables</Title>
+            <Divider />
+            <Title level={4}>Diagnostics</Title>
             <Paragraph>
-              <pre style={{ background: '#f0f0f0', padding: 8, borderRadius: 4, fontSize: 12 }}>
-                {JSON.stringify(info.env.window, null, 2)}
-              </pre>
+              <Button type="primary" onClick={testSupabaseConnection} style={{ marginRight: 8 }}>
+                Test Supabase
+              </Button>
+              <Button onClick={testDictAccess}>
+                Test Dictionary
+              </Button>
             </Paragraph>
             
-            <Title level={5}>Process Environment Variables</Title>
+            <List
+              size="small"
+              bordered
+              dataSource={[
+                { label: 'Supabase Connection', ...supabaseTest },
+                { label: 'Dictionary Access', ...dictTest }
+              ]}
+              renderItem={item => (
+                <List.Item>
+                  <Text strong>{item.label}:</Text> {renderStatus(item.status, item.message)}
+                </List.Item>
+              )}
+            />
+            
+            <Divider />
+            <Title level={4}>Environment Variables</Title>
+            
             <Paragraph>
-              <Text code>{info.env.process.join(', ')}</Text>
+              <Text strong>Build Time (process.env):</Text> {envInfo.processBuildTime}
+            </Paragraph>
+            <Paragraph>
+              <Text strong>Build Time (window.env):</Text> {envInfo.windowBuildTime}
             </Paragraph>
             
-            <Title level={5}>Network Information</Title>
             <Paragraph>
-              <Text strong>Online:</Text> {info.network.online.toString()}
+              <Text strong>process.env Keys:</Text> {envInfo.processEnvKeys?.join(', ')}
             </Paragraph>
             <Paragraph>
-              <Text strong>URL:</Text> {info.network.url}
+              <Text strong>window.env Keys:</Text> {envInfo.windowEnvKeys?.join(', ')}
             </Paragraph>
-            
-            <Divider style={{ margin: '8px 0' }} />
-            
-            <Button 
-              type="primary" 
-              onClick={async () => {
-                try {
-                  await fetch('/build-info.json');
-                  alert('Successfully fetched build-info.json');
-                } catch (error) {
-                  alert(`Error fetching build-info.json: ${error}`);
-                }
-              }}
-            >
-              Test Fetch build-info.json
-            </Button>
           </>
         )}
       </Space>
     </Card>
   );
-};
-
-export default DebugInfo; 
+}; 
