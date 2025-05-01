@@ -1,69 +1,105 @@
 #!/bin/bash
 
-# 打印当前环境信息
-echo "开始自定义构建脚本..."
-echo "当前目录: $(pwd)"
-echo "目录内容: $(ls -la)"
+# Print environment information
+echo "Starting custom build script..."
+echo "Current directory: $(pwd)"
+echo "Directory contents: $(ls -la)"
 
-# 添加构建时间环境变量，方便调试
-export REACT_APP_BUILD_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-echo "BUILD_TIME: $REACT_APP_BUILD_TIME"
-
-# 检查Supabase配置
-echo "检查Supabase环境变量状态..."
+# Ensure Supabase environment variables are set - use fallbacks if needed
 if [ -z "$REACT_APP_SUPABASE_URL" ]; then
-  echo "警告: REACT_APP_SUPABASE_URL 未设置"
+  echo "Setting REACT_APP_SUPABASE_URL from fallback value"
+  export REACT_APP_SUPABASE_URL="https://tvminksjqvdhamspxtoh.supabase.co"
 else
-  echo "REACT_APP_SUPABASE_URL: 已配置"
+  echo "REACT_APP_SUPABASE_URL: Already configured in environment"
 fi
 
 if [ -z "$REACT_APP_SUPABASE_ANON_KEY" ]; then
-  echo "警告: REACT_APP_SUPABASE_ANON_KEY 未设置"
+  echo "Setting REACT_APP_SUPABASE_ANON_KEY from fallback value"
+  export REACT_APP_SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInJlZiI6InR2bWlua3NqcXZkaGFtc3B4dG9oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxMTk3MzMsImV4cCI6MjA2MTY5NTczM30.w_Q-fJBymmrCFPvbOseU0rAAvOMTwd9HuJ4a0R9z3Rk"
 else
-  echo "REACT_APP_SUPABASE_ANON_KEY: 已配置"
+  echo "REACT_APP_SUPABASE_ANON_KEY: Already configured in environment"
 fi
 
-# 构建应用
-echo "开始构建应用..."
+# Add build time environment variable for debugging
+export REACT_APP_BUILD_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+echo "BUILD_TIME: $REACT_APP_BUILD_TIME"
+
+# Check Supabase configuration
+echo "Checking Supabase environment variables..."
+if [ -z "$REACT_APP_SUPABASE_URL" ]; then
+  echo "WARNING: REACT_APP_SUPABASE_URL is not set"
+else
+  echo "REACT_APP_SUPABASE_URL: Configured"
+fi
+
+if [ -z "$REACT_APP_SUPABASE_ANON_KEY" ]; then
+  echo "WARNING: REACT_APP_SUPABASE_ANON_KEY is not set"
+else
+  echo "REACT_APP_SUPABASE_ANON_KEY: Configured"
+fi
+
+# Generate env.js file
+echo "Generating environment configuration files..."
+mkdir -p public
+cat > public/env.js << EOL
+// This file is auto-generated - do not edit
+window.env = {
+  "REACT_APP_SUPABASE_URL": "${REACT_APP_SUPABASE_URL}",
+  "REACT_APP_SUPABASE_ANON_KEY": "${REACT_APP_SUPABASE_ANON_KEY}",
+  "REACT_APP_BUILD_TIME": "${REACT_APP_BUILD_TIME}"
+};
+EOL
+echo "Created public/env.js with environment variables"
+
+# Build the application
+echo "Starting application build..."
 npm run build
 
-# 打印build目录结构
-echo "构建完成，检查build目录..."
-echo "Build目录内容:"
+# Check build directory structure
+echo "Build complete, checking build directory..."
+echo "Build directory contents:"
 ls -la build
 
-# 确保字典目录存在
+# Ensure dictionary directory exists
 if [ -d "build/dict" ]; then
-  echo "字典目录存在，检查内容..."
+  echo "Dictionary directory exists, checking contents..."
   ls -la build/dict
 else
-  echo "字典目录不存在，创建并复制内容..."
+  echo "Dictionary directory doesn't exist, creating and copying contents..."
   mkdir -p build/dict
   cp -r public/dict/* build/dict/
-  echo "复制后的字典目录内容:"
+  echo "Dictionary directory contents after copying:"
   ls -la build/dict
 fi
 
-# 创建一个特殊的txt文件以便验证文件是否可访问
-echo "创建测试文件..."
-echo "Kuromoji词典可访问性测试文件 - 构建时间: $REACT_APP_BUILD_TIME" > build/dict/test-access.txt
+# Copy env.js to build directory
+echo "Copying env.js to build directory..."
+cp public/env.js build/env.js
 
-# 确保_redirects文件存在
-echo "确保_redirects文件存在..."
+# Create a special txt file to verify file accessibility
+echo "Creating test file..."
+echo "Kuromoji dictionary accessibility test file - Build time: $REACT_APP_BUILD_TIME" > build/dict/test-access.txt
+
+# Ensure _redirects file exists
+echo "Ensuring _redirects file exists..."
 echo "/* /index.html 200" > build/static/_redirects
 echo "/* /index.html 200" > build/_redirects
 
-# 创建状态文件，方便调试
-echo "创建状态文件..."
+# Create status file for debugging
+echo "Creating status file..."
 cat > build/build-info.json << EOL
 {
   "buildTime": "$REACT_APP_BUILD_TIME",
   "supabaseConfigured": {
-    "url": ${REACT_APP_SUPABASE_URL:+true},
-    "key": ${REACT_APP_SUPABASE_ANON_KEY:+true}
+    "url": true,
+    "key": true
   },
-  "dictionaryFiles": $(ls -1 build/dict | wc -l)
+  "dictionaryFiles": $(ls -1 build/dict | wc -l),
+  "env": {
+    "url": "${REACT_APP_SUPABASE_URL}",
+    "keyLength": ${#REACT_APP_SUPABASE_ANON_KEY}
+  }
 }
 EOL
 
-echo "自定义构建脚本完成" 
+echo "Custom build script complete" 
