@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Typography, Card, Tabs } from 'antd';
+import { Typography, Card, Tabs, Alert } from 'antd';
 import { FlashcardSection } from './FlashcardSection';
 import { ReadingSection } from './ReadingSection';
 import { QuizSection } from './QuizSection';
 import { processJapaneseText } from '../utils/textProcessor';
 import { DebugInfo } from './DebugInfo';
+import type { VocabularyItem, QuizQuestion } from '../utils/textProcessor';
 
 const { Title } = Typography;
 
@@ -12,20 +13,50 @@ interface JapaneseLearningProps {
   text: string;
 }
 
+// Default empty state
+const DEFAULT_DATA = {
+  vocabulary: [] as VocabularyItem[],
+  sentences: [] as string[],
+  quizzes: [] as QuizQuestion[]
+};
+
 export const JapaneseLearning = ({ text }: JapaneseLearningProps): JSX.Element => {
-  const [processedData, setProcessedData] = useState({
-    vocabulary: [],
-    sentences: [],
-    quizzes: []
-  });
+  const [processedData, setProcessedData] = useState(DEFAULT_DATA);
   const [showDebug, setShowDebug] = useState(
     process.env.NODE_ENV !== 'production' || 
     window.location.search.includes('debug=true')
   );
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
+  // Get current environment information
+  const getCurrentEnv = () => {
+    return {
+      PUBLIC_URL: process.env.PUBLIC_URL || '.',
+      NODE_ENV: process.env.NODE_ENV || 'development',
+      BASE_URL: window.location.origin,
+      CURRENT_URL: window.location.href
+    };
+  };
 
   useEffect(() => {
-    const processed = processJapaneseText(text);
-    setProcessedData(processed);
+    // Log environment information for debugging
+    const envInfo = getCurrentEnv();
+    console.log('当前环境信息:');
+    Object.entries(envInfo).forEach(([key, value]) => {
+      console.log(`${key}: ${value}`);
+    });
+    
+    try {
+      // Process the text
+      const data = processJapaneseText(text || '日本語');
+      setProcessedData(data);
+      setIsLoading(false);
+    } catch (err) {
+      console.error('Error processing text:', err);
+      setError('テキスト処理中にエラーが発生しました。');
+      setIsLoading(false);
+    }
   }, [text]);
 
   const items = [
@@ -61,7 +92,22 @@ export const JapaneseLearning = ({ text }: JapaneseLearningProps): JSX.Element =
             </a>
           </div>
         )}
-        <Tabs defaultActiveKey="flashcards" items={items} />
+        
+        {error && (
+          <Alert
+            message="エラー"
+            description={error}
+            type="error"
+            showIcon
+            style={{ marginBottom: 16 }}
+          />
+        )}
+        
+        {isLoading ? (
+          <div>読み込み中...</div>
+        ) : (
+          <Tabs defaultActiveKey="flashcards" items={items} />
+        )}
       </Card>
     </>
   );
