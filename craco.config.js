@@ -8,7 +8,11 @@ module.exports = {
     configure: {
       resolve: {
         fallback: {
-          path: require.resolve("path-browserify")
+          path: require.resolve("path-browserify"),
+          fs: false,
+          stream: false,
+          util: false,
+          buffer: false
         }
       },
       output: {

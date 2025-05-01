@@ -54,7 +54,9 @@ echo "Created public/env.js with environment variables"
 
 # Build the application
 echo "Starting application build..."
-npm run build
+npm i path-browserify || true
+npm i @craco/craco || true
+npx craco build
 
 # Check build directory structure
 echo "Build complete, checking build directory..."
@@ -208,6 +210,8 @@ echo "Created status.html page in build directory"
 
 # Ensure _redirects file exists
 echo "Ensuring _redirects file exists..."
+# Create static directory if it doesn't exist
+mkdir -p build/static
 echo "/* /index.html 200" > build/static/_redirects
 echo "/* /index.html 200" > build/_redirects
 

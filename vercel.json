@@ -11,55 +11,45 @@
   ],
   "routes": [
     {
-      "src": "/manifest.json",
-      "headers": {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "GET",
-        "Access-Control-Allow-Headers": "X-Requested-With, Content-Type, Accept",
-        "cache-control": "public, max-age=0, must-revalidate"
-      },
-      "continue": true
-    },
-    {
       "src": "/static/(.*)",
       "headers": {
         "cache-control": "public, max-age=31536000, immutable"
       },
-      "continue": true
+      "dest": "/static/$1"
     },
     {
       "src": "/dict/(.*)",
       "headers": {
         "cache-control": "public, max-age=31536000, immutable"
       },
-      "continue": true
+      "dest": "/dict/$1"
+    },
+    {
+      "src": "/env.js",
+      "dest": "/env.js"
+    },
+    {
+      "src": "/status.html",
+      "dest": "/status.html"
+    },
+    {
+      "src": "/direct-test.html",
+      "dest": "/direct-test.html"
+    },
+    {
+      "src": "/debug.html",
+      "dest": "/debug.html"
+    },
+    {
+      "src": "/build-info.json",
+      "dest": "/build-info.json"
     },
     {
       "src": "/(.*)",
       "headers": {
         "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "GET, OPTIONS",
-        "Access-Control-Allow-Headers": "X-Requested-With, Content-Type, Accept"
+        "Access-Control-Allow-Methods": "GET, OPTIONS"
       },
-      "continue": true
-    },
-    {
-      "handle": "filesystem"
-    },
-    {
-      "src": "/manifest.json",
-      "dest": "/manifest.json"
-    },
-    {
-      "src": "/favicon.ico",
-      "dest": "/favicon.ico"
-    },
-    {
-      "src": "/logo(.*).png",
-      "dest": "/logo$1.png"
-    },
-    {
-      "src": "/(.*)",
       "dest": "/index.html"
     }
   ]
